@@ -9,22 +9,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from utils import gridGraph
+from utils import gridGraphINDX
 
-nX = 10
-nY = 10
+nX = 5
+nY = 5
 cellSize = 5
 
 # coordinates
 ################
-#Z = np.arange(nY*nX).reshape(nY, nX)
-Z = np.random.randint(1,1000, size=(nY,nX))
+Z = np.arange(nY*nX).reshape(nY, nX)
+#Z = np.random.randint(1,1000, size=(nY,nX))
 x = np.arange(nX)*cellSize
 y = np.arange(nY)*cellSize
 
 # create graph
 #################
-G = gridGraph(Z,x,y,cellSize)
+G = gridGraphINDX(Z,x,y)
 W = nx.get_edge_attributes(G,'weight')
 P = nx.get_node_attributes(G,'pos')
 
@@ -34,7 +34,7 @@ nodesSP = nx.dijkstra_path(G, 0, nX*nY-1, weight='weight')
 edgesSP = list(zip(nodesSP,nodesSP[1:]))
 
 nodes_color = ['red' if node in nodesSP else 'blue'  for node in G.nodes]
-edges_color = ['red' if edge in edgesSP else 'black' for edge in G.edges]
+edges_color = ['red' if edge in edgesSP else 'white' for edge in G.edges]
 
 # plot axis
 ###############

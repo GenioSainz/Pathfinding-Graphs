@@ -9,13 +9,16 @@ import matplotlib.pyplot as plt
 from perlin_noise import PerlinNoise
 from utils import roundGrid
 
-noise = PerlinNoise(octaves=4, seed=1)
-frec  = 0.00125
 
-cellSize = 5;
+
+
+noise = PerlinNoise(octaves=4, seed=1)
+frec  = 0.00125*3
+
+cellSize = 5
 minXY = 0
-N     = 500
-maxXY = N*cellSize;
+N     = 200
+maxXY = N*cellSize
 x     = np.linspace(minXY,maxXY,N)
 y     = np.linspace(minXY,maxXY,N)
 X,Y   = np.meshgrid(x,y)

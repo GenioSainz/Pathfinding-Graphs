@@ -9,15 +9,15 @@ Created on Thu Jun 15 14:15:33 2023
 import numpy as np
 import networkx as nx
 
-def gridGraph(Z,x,y,cellSize):
-    
+
+def gridGraphINDX(Z,x,y):
     
     G=nx.Graph()
     
     nY,nX = Z.shape
     
     X,Y = np.meshgrid(x,y) 
-    Y = np.flipud(Y)
+    Y   = np.flipud(Y)
     
     zShape = Z.shape
     
@@ -27,85 +27,202 @@ def gridGraph(Z,x,y,cellSize):
         for j in range(nX-1):
             
             # a -- b
-            # | \/
-            # c    d
+            # | \/ |
+            # c -- d
             # G.add_weighted_edges_from([(n1,n2,weight)])
+
+            indxa = (i  ,j  )
+            indxb = (i  ,j+1)
+            indxc = (i+1,j  )
+            indxd = (i+1,j+1)
             
-            a = np.ravel_multi_index((i,j), zShape)
-            b = np.ravel_multi_index((i,j+1), zShape)
-            c = np.ravel_multi_index((i+1,j), zShape)
-            d = np.ravel_multi_index((i+1,j+1), zShape)
+            a = np.ravel_multi_index(indxa,zShape)
+            b = np.ravel_multi_index(indxb,zShape)
+            c = np.ravel_multi_index(indxc,zShape)
+            d = np.ravel_multi_index(indxd,zShape)
             
+            G.add_node(a,pos=(X[indxa],Y[indxa]))
+            G.add_node(b,pos=(X[indxb],Y[indxb]))
+            G.add_node(c,pos=(X[indxc],Y[indxc]))
+            G.add_node(d,pos=(X[indxd],Y[indxd]))
             
-            G.add_node(a,pos=(X[i,j],Y[i,j]))
-            G.add_node(b,pos=(X[i,j+1],Y[i,j+1]))
-            G.add_node(c,pos=(X[i+1,j],Y[i+1,j]))
-            G.add_node(d,pos=(X[i+1,j+1],Y[i+1,j+1]))
-            
-            weight_ab = Z[i,j] + Z[i,j+1]
+            weight_ab = Z[indxa] + Z[indxb]
             G.add_weighted_edges_from([(a,b,weight_ab)])
             
-            weight_ac = Z[i,j] + Z[i+1,j]
+            weight_ac = Z[indxa] + Z[indxc]
             G.add_weighted_edges_from([(a,c,weight_ac)])
             
-            weight_ad = Z[i,j] + Z[i+1,j+1]
+            weight_ad = Z[indxa] + Z[indxd]
             G.add_weighted_edges_from([(a,d,weight_ad)])
             
-            weight_cd = Z[i+1,j] + Z[i,j+1]
-            G.add_weighted_edges_from([(c,b,weight_cd)])
-            
-            
-    ## last row
-    ###############
-    i = nY-1
-    for j in range(nX-1):
+            weight_cd = Z[indxc] + Z[indxd]
+            G.add_weighted_edges_from([(c,d,weight_cd)])
+
+            weight_bd = Z[indxb] + Z[indxd]
+            G.add_weighted_edges_from([(b,d,weight_bd)])
+
+            weight_cb = Z[indxc] + Z[indxb]
+            G.add_weighted_edges_from([(c,b,weight_cb)])
+                      
+    return G
+
+def gridGraphDIS(X,Y,Z):
     
-        # c -- d
-        
-        c = np.ravel_multi_index((i,j), zShape)
-        d = np.ravel_multi_index((i,j+1), zShape)
+    G      = nx.Graph()
+
+    zShape = Z.shape
+    nY,nX  = Z.shape
+    Y      = np.flipud(Y)
     
-        weight_cd = Z[i,j] + Z[i,j+1]
-        G.add_weighted_edges_from([(c,d,weight_cd)])
-        
-        
-    ## last column
-    ##################
-    j = nX-1
+    ## rows cols  - 1
+    #####################
     for i in range(nY-1):
+        for j in range(nX-1):
+            
+            # a -- b
+            # | \/ |
+            # c -- d
+            # G.add_weighted_edges_from([(n1,n2,weight)])
+            
+            indxa = (i  ,j  )
+            indxb = (i  ,j+1)
+            indxc = (i+1,j  )
+            indxd = (i+1,j+1)
+            
+            a = np.ravel_multi_index(indxa,zShape)
+            b = np.ravel_multi_index(indxb,zShape)
+            c = np.ravel_multi_index(indxc,zShape)
+            d = np.ravel_multi_index(indxd,zShape)
+            
+            G.add_node(a,pos=(X[indxa],Y[indxa]))
+            G.add_node(b,pos=(X[indxb],Y[indxb]))
+            G.add_node(c,pos=(X[indxc],Y[indxc]))
+            G.add_node(d,pos=(X[indxd],Y[indxd]))
+            
+            weight_ab = distanceAB(indxa,indxb,X,Y,Z)
+            G.add_weighted_edges_from([(a,b,weight_ab)])
+            
+            weight_ac = distanceAB(indxa,indxc,X,Y,Z)
+            G.add_weighted_edges_from([(a,c,weight_ac)])
+            
+            weight_ad = distanceAB(indxa,indxd,X,Y,Z)
+            G.add_weighted_edges_from([(a,d,weight_ad)])
+            
+            weight_cd = distanceAB(indxc,indxd,X,Y,Z)
+            G.add_weighted_edges_from([(c,b,weight_cd)])
+
+            weight_cb = distanceAB(indxc,indxb,X,Y,Z)
+            G.add_weighted_edges_from([(c,b,weight_cb)])
+            
+                      
+    return G
+
+def gridGraph_DIS_SLOPE(X,Y,Z,gX,gY):
     
-        # b
-        # |
-        # d
+    G      = nx.Graph()
+
+    zShape = Z.shape
+    nY,nX  = Z.shape
+    Y      = np.flipud(Y)
+    
+    ## rows cols  - 1
+    #####################
+    for i in range(nY-1):
+        for j in range(nX-1):
+            
+            # a -- b
+            # | \/ |
+            # c -- d
+            # G.add_weighted_edges_from([(n1,n2,weight)])
+            
+            indxa = (i  ,j  )
+            indxb = (i  ,j+1)
+            indxc = (i+1,j  )
+            indxd = (i+1,j+1)
+            
+            vx  = np.array([1,0]);
+            vy  = np.array([0,1]);
+            vad = np.array([1,-1])/np.sqrt(2);
+            vcb = np.array([1,1])/np.sqrt(2) ;
         
-        b = np.ravel_multi_index((i,j), zShape)
-        d = np.ravel_multi_index((i+1,j), zShape)
-    
-        weight_bd = Z[i,j] + Z[i+1,j]
-        G.add_weighted_edges_from([(b,d,weight_bd)])
+            
+            a = np.ravel_multi_index(indxa,zShape)
+            b = np.ravel_multi_index(indxb,zShape)
+            c = np.ravel_multi_index(indxc,zShape)
+            d = np.ravel_multi_index(indxd,zShape)
+            
+            G.add_node(a,pos=(X[indxa],Y[indxa]))
+            G.add_node(b,pos=(X[indxb],Y[indxb]))
+            G.add_node(c,pos=(X[indxc],Y[indxc]))
+            G.add_node(d,pos=(X[indxd],Y[indxd]))
+            
+            weight_ab = 0*distanceAB(indxa,indxb,X,Y,Z) + directionalSlope(indxa,Z,gX,gY,vx)
+            G.add_weighted_edges_from([(a,b,weight_ab)])
+            
+            weight_ac = 0*distanceAB(indxa,indxc,X,Y,Z) + directionalSlope(indxa,Z,gX,gY,vy)
+            G.add_weighted_edges_from([(a,c,weight_ac)])
+            
+            weight_ad = 0*distanceAB(indxa,indxd,X,Y,Z) + directionalSlope(indxa,Z,gX,gY,vad)
+            G.add_weighted_edges_from([(a,d,weight_ad)])
+            
+            weight_cd = 0*distanceAB(indxc,indxd,X,Y,Z) + directionalSlope(indxc,Z,gX,gY,vx)
+            G.add_weighted_edges_from([(c,b,weight_cd)])
+
+            weight_cb = 0*distanceAB(indxc,indxb,X,Y,Z) + directionalSlope(indxc,Z,gX,gY,vcb)
+            G.add_weighted_edges_from([(c,b,weight_cb)])
+            
                       
     return G
 
 
 
-def linearIndx():
-    
-    a = np.random.randint(1,9, size=(3,4))
-    
-    # sub2ind
-    sub1  = np.array([[0,1,2],[0,2,1]])
-    ind1  = np.ravel_multi_index(sub1, a.shape)
-    
-    # ind2sub
-    ind2 = np.array([2,5])
-    sub2 = np.unravel_index(ind2, a.shape)
-    
-    return (ind1,sub2)
-
-
 def roundGrid(x,cellSize):
     
     return np.round(x/cellSize)*cellSize
+
+
+def distanceAB(a,b,X,Y,Z):
+
+    # a = (ia,ja)
+    # b = (ib,jb)
+    
+    return np.sqrt( (X[a]-X[b])**2 + (Y[a]-Y[b])**2 + (Z[a]-Z[b])**2 )
+
+
+def directionalSlope(indx,Z,gX,gY,vec):
+    
+    gradient_vec = np.array( [gX[indx],gY[indx]] )
+    
+    return  np.abs( np.dot(vec,gradient_vec) )
+    
+def node2coords(nodesSP,X,Y,Z):
+    
+    # ind2sub       index
+    ind = np.array(nodesSP)
+    sub = np.unravel_index(ind, X.shape)
+
+    # subs to coordinates
+    xi = X[sub[0],sub[1]]
+    yi = Y[sub[0],sub[1]]
+    zi = Z[sub[0],sub[1]]
+
+    return xi,yi,zi
+
+
+def coords2node(xi,yi,x,y,cellSize):
+    
+    x_input_round = roundGrid(xi,cellSize)
+    y_input_round = roundGrid(yi,cellSize)
+    
+    i = np.nonzero(y == y_input_round )[0][0]
+    j = np.nonzero(x == x_input_round )[0][0]
+    
+    sub  = np.array((i,j))
+    node = np.ravel_multi_index(sub,(y.size,x.size))
+    
+    return node
+
+
     
     
 
