@@ -5,10 +5,8 @@ Created on Thu Jun 15 14:15:33 2023
 @author: Genio
 """
 
-
 import numpy as np
 import networkx as nx
-
 
 def gridGraphINDX(Z,x,y):
     
@@ -66,13 +64,12 @@ def gridGraphINDX(Z,x,y):
                       
     return G
 
+
 def gridGraphDIS(X,Y,Z):
     
-    G      = nx.Graph()
-
     zShape = Z.shape
     nY,nX  = Z.shape
-    Y      = np.flipud(Y)
+    G      = nx.Graph()
     
     ## rows cols  - 1
     #####################
@@ -93,7 +90,7 @@ def gridGraphDIS(X,Y,Z):
             b = np.ravel_multi_index(indxb,zShape)
             c = np.ravel_multi_index(indxc,zShape)
             d = np.ravel_multi_index(indxd,zShape)
-            
+
             G.add_node(a,pos=(X[indxa],Y[indxa]))
             G.add_node(b,pos=(X[indxb],Y[indxb]))
             G.add_node(c,pos=(X[indxc],Y[indxc]))
@@ -108,8 +105,8 @@ def gridGraphDIS(X,Y,Z):
             weight_ad = distanceAB(indxa,indxd,X,Y,Z)
             G.add_weighted_edges_from([(a,d,weight_ad)])
             
-            weight_cd = distanceAB(indxc,indxd,X,Y,Z)
-            G.add_weighted_edges_from([(c,b,weight_cd)])
+            # weight_cd = distanceAB(indxc,indxd,X,Y,Z)
+            # G.add_weighted_edges_from([(c,b,weight_cd)])
 
             weight_cb = distanceAB(indxc,indxb,X,Y,Z)
             G.add_weighted_edges_from([(c,b,weight_cb)])
@@ -117,14 +114,13 @@ def gridGraphDIS(X,Y,Z):
                       
     return G
 
+
 def gridGraph_DIS_SLOPE(X,Y,Z,gX,gY):
     
+    zShape = Z.shape
+    nY,nX  = Z.shape    
     G      = nx.Graph()
 
-    zShape = Z.shape
-    nY,nX  = Z.shape
-    Y      = np.flipud(Y)
-    
     ## rows cols  - 1
     #####################
     for i in range(nY-1):
@@ -140,10 +136,10 @@ def gridGraph_DIS_SLOPE(X,Y,Z,gX,gY):
             indxc = (i+1,j  )
             indxd = (i+1,j+1)
             
-            vx  = np.array([1,0]);
-            vy  = np.array([0,1]);
-            vad = np.array([1,-1])/np.sqrt(2);
-            vcb = np.array([1,1])/np.sqrt(2) ;
+            vx  = np.array([1,0])
+            vy  = np.array([0,1])
+            vad = np.array([1,-1])/np.sqrt(2)
+            vcb = np.array([1,1]) /np.sqrt(2) 
         
             
             a = np.ravel_multi_index(indxa,zShape)
@@ -156,24 +152,23 @@ def gridGraph_DIS_SLOPE(X,Y,Z,gX,gY):
             G.add_node(c,pos=(X[indxc],Y[indxc]))
             G.add_node(d,pos=(X[indxd],Y[indxd]))
             
-            weight_ab = 0*distanceAB(indxa,indxb,X,Y,Z) + directionalSlope(indxa,Z,gX,gY,vx)
+            weight_ab = 0*distanceAB(indxa,indxb,X,Y,Z) + directionalSlope(indxa,gX,gY,vx)
             G.add_weighted_edges_from([(a,b,weight_ab)])
             
-            weight_ac = 0*distanceAB(indxa,indxc,X,Y,Z) + directionalSlope(indxa,Z,gX,gY,vy)
+            weight_ac = 0*distanceAB(indxa,indxc,X,Y,Z) + directionalSlope(indxa,gX,gY,vy)
             G.add_weighted_edges_from([(a,c,weight_ac)])
             
-            weight_ad = 0*distanceAB(indxa,indxd,X,Y,Z) + directionalSlope(indxa,Z,gX,gY,vad)
+            weight_ad = 0*distanceAB(indxa,indxd,X,Y,Z) + directionalSlope(indxa,gX,gY,vad)
             G.add_weighted_edges_from([(a,d,weight_ad)])
             
-            weight_cd = 0*distanceAB(indxc,indxd,X,Y,Z) + directionalSlope(indxc,Z,gX,gY,vx)
-            G.add_weighted_edges_from([(c,b,weight_cd)])
+            # weight_cd = 0*distanceAB(indxc,indxd,X,Y,Z) + directionalSlope(indxc,gX,gY,vx)
+            # G.add_weighted_edges_from([(c,b,weight_cd)])
 
-            weight_cb = 0*distanceAB(indxc,indxb,X,Y,Z) + directionalSlope(indxc,Z,gX,gY,vcb)
+            weight_cb = 0*distanceAB(indxc,indxb,X,Y,Z) + directionalSlope(indxc,gX,gY,vcb)
             G.add_weighted_edges_from([(c,b,weight_cb)])
             
                       
     return G
-
 
 
 def roundGrid(x,cellSize):
@@ -189,12 +184,13 @@ def distanceAB(a,b,X,Y,Z):
     return np.sqrt( (X[a]-X[b])**2 + (Y[a]-Y[b])**2 + (Z[a]-Z[b])**2 )
 
 
-def directionalSlope(indx,Z,gX,gY,vec):
+def directionalSlope(indx,gX,gY,vec):
     
     gradient_vec = np.array( [gX[indx],gY[indx]] )
     
     return  np.abs( np.dot(vec,gradient_vec) )
     
+
 def node2coords(nodesSP,X,Y,Z):
     
     # ind2sub       index
@@ -202,20 +198,19 @@ def node2coords(nodesSP,X,Y,Z):
     sub = np.unravel_index(ind, X.shape)
 
     # subs to coordinates
-    xi = X[sub[0],sub[1]]
-    yi = Y[sub[0],sub[1]]
-    zi = Z[sub[0],sub[1]]
+    xi = X[sub]
+    yi = Y[sub]
+    zi = Z[sub]
 
     return xi,yi,zi
-
 
 def coords2node(xi,yi,x,y,cellSize):
     
     x_input_round = roundGrid(xi,cellSize)
     y_input_round = roundGrid(yi,cellSize)
     
-    i = np.nonzero(y == y_input_round )[0][0]
-    j = np.nonzero(x == x_input_round )[0][0]
+    i = np.nonzero( y == y_input_round )[0][0]
+    j = np.nonzero( x == x_input_round )[0][0]
     
     sub  = np.array((i,j))
     node = np.ravel_multi_index(sub,(y.size,x.size))
@@ -223,25 +218,5 @@ def coords2node(xi,yi,x,y,cellSize):
     return node
 
 
-    
-    
 
-# import numpy as np
-
-# a = np.arange(15).reshape(3, 5)
-# b = np.arange(1,20,2)
-# c = np.zeros(a.shape)
-# d = np.linspace(1,8,5)
-# e = np.random.rand(3,2)
-# f = np.random.randint(1,9, size=(3,3))
-
-# x = np.arange(8)
-# y = np.arange(10)
-# X,Y = np.meshgrid(x,y)
-
-# m1 = np.ones((2,3))*5
-# m2 = np.ones((2,3))*7
-
-# mH = np.hstack((m1,m2))
-# mV = np.vstack((m1,m2))
 

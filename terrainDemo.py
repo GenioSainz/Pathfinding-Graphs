@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 from perlin_noise import PerlinNoise
 from utils import roundGrid
 
-
-
-
 noise = PerlinNoise(octaves=4, seed=1)
 frec  = 0.00125*3
 
