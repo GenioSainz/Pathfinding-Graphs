@@ -4,10 +4,10 @@ Created on Wed Jun 14 13:25:24 2023
 
 @author: Genio
 """
-import numpy as np
+from   perlin_noise      import PerlinNoise
+from   utils             import roundGrid
 import matplotlib.pyplot as plt
-from perlin_noise import PerlinNoise
-from utils import roundGrid
+import numpy             as np
 
 noise = PerlinNoise(octaves=4, seed=1)
 frec  = 0.00125*3

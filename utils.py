@@ -104,9 +104,6 @@ def gridGraphDIS(X,Y,Z):
             
             weight_ad = distanceAB(indxa,indxd,X,Y,Z)
             G.add_weighted_edges_from([(a,d,weight_ad)])
-            
-            # weight_cd = distanceAB(indxc,indxd,X,Y,Z)
-            # G.add_weighted_edges_from([(c,b,weight_cd)])
 
             weight_cb = distanceAB(indxc,indxb,X,Y,Z)
             G.add_weighted_edges_from([(c,b,weight_cb)])
@@ -120,7 +117,8 @@ def gridGraph_DIS_SLOPE(X,Y,Z,gX,gY):
     zShape = Z.shape
     nY,nX  = Z.shape    
     G      = nx.Graph()
-
+    
+    Gxy = np.sqrt(gY**2+gX**2)
     ## rows cols  - 1
     #####################
     for i in range(nY-1):
@@ -152,23 +150,60 @@ def gridGraph_DIS_SLOPE(X,Y,Z,gX,gY):
             G.add_node(c,pos=(X[indxc],Y[indxc]))
             G.add_node(d,pos=(X[indxd],Y[indxd]))
             
-            weight_ab = 0*distanceAB(indxa,indxb,X,Y,Z) + directionalSlope(indxa,gX,gY,vx)
-            G.add_weighted_edges_from([(a,b,weight_ab)])
-            
-            weight_ac = 0*distanceAB(indxa,indxc,X,Y,Z) + directionalSlope(indxa,gX,gY,vy)
-            G.add_weighted_edges_from([(a,c,weight_ac)])
-            
-            weight_ad = 0*distanceAB(indxa,indxd,X,Y,Z) + directionalSlope(indxa,gX,gY,vad)
-            G.add_weighted_edges_from([(a,d,weight_ad)])
-            
-            # weight_cd = 0*distanceAB(indxc,indxd,X,Y,Z) + directionalSlope(indxc,gX,gY,vx)
-            # G.add_weighted_edges_from([(c,b,weight_cd)])
+            slopeUmbral = 0.16
 
-            weight_cb = 0*distanceAB(indxc,indxb,X,Y,Z) + directionalSlope(indxc,gX,gY,vcb)
-            G.add_weighted_edges_from([(c,b,weight_cb)])
+            weight_ab = slopeAB(indxa,indxb,X,Y,Z)
+            if  weight_ab<slopeUmbral:
+                G.add_weighted_edges_from([(a,b,weight_ab)])
+            
+            weight_ac = slopeAB(indxa,indxc,X,Y,Z)
+            if  weight_ac<slopeUmbral:
+                G.add_weighted_edges_from([(a,c,weight_ac)])
+            
+            weight_ad = slopeAB(indxa,indxd,X,Y,Z)
+            if  weight_ad<slopeUmbral:
+                G.add_weighted_edges_from([(a,d,weight_ad)])
+
+            weight_cb = slopeAB(indxc,indxb,X,Y,Z)
+            if  weight_cb<slopeUmbral:
+                G.add_weighted_edges_from([(c,b,weight_cb)])
+
+            # weight_ab = directionalSlope(indxa,gX,gY,vx)
+            # if  weight_ab<slopeUmbral:
+            #     G.add_weighted_edges_from([(a,b,weight_ab)])
+            
+            # weight_ac = directionalSlope(indxa,gX,gY,vy)
+            # if  weight_ac<slopeUmbral:
+            #     G.add_weighted_edges_from([(a,c,weight_ac)])
+            
+            # weight_ad = directionalSlope(indxa,gX,gY,vad)
+            # if  weight_ad<slopeUmbral:
+            #     G.add_weighted_edges_from([(a,d,weight_ad)])
+
+            # weight_cb = directionalSlope(indxc,gX,gY,vcb)
+            # if  weight_cb<slopeUmbral:
+            #     G.add_weighted_edges_from([(c,b,weight_cb)])
+
+            
+            # weight_ab = slopeFun(indxa,indxa,Gxy)
+            # G.add_weighted_edges_from([(a,b,weight_ab)])
+            
+            # weight_ac = slopeFun(indxa,indxb,Gxy)
+            # G.add_weighted_edges_from([(a,c,weight_ac)])
+            
+            # weight_ad = slopeFun(indxa,indxd,Gxy)
+            # G.add_weighted_edges_from([(a,d,weight_ad)])
+
+            # weight_cb = slopeFun(indxc,indxb,Gxy)
+            # G.add_weighted_edges_from([(c,b,weight_cb)])
             
                       
     return G
+
+def moving_average(array, w,mode='valid'):
+    
+    window = np.ones(w)/w
+    return np.convolve(array,window,mode) 
 
 
 def roundGrid(x,cellSize):
@@ -183,12 +218,28 @@ def distanceAB(a,b,X,Y,Z):
     
     return np.sqrt( (X[a]-X[b])**2 + (Y[a]-Y[b])**2 + (Z[a]-Z[b])**2 )
 
+def slopeAB(a,b,X,Y,Z):
+
+    # a = (ia,ja)
+    # b = (ib,jb)
+    
+    rise = np.abs( Z[a]-Z[b])
+    run  = np.sqrt( (X[a]-X[b])**2 + (Y[a]-Y[b])**2)
+
+    return rise/run
+
 
 def directionalSlope(indx,gX,gY,vec):
     
     gradient_vec = np.array( [gX[indx],gY[indx]] )
     
     return  np.abs( np.dot(vec,gradient_vec) )
+
+
+def slopeFun(indxA,indxB,Gxy):
+
+     return ((Gxy[indxA]+Gxy[indxB])/2)
+
     
 
 def node2coords(nodesSP,X,Y,Z):
@@ -217,6 +268,16 @@ def coords2node(xi,yi,x,y,cellSize):
     
     return node
 
+
+def elevationProfile(xSP,ySP,zSP):
+
+    dx = np.diff(xSP);np.insert(dx,0,0)
+    dy = np.diff(ySP);np.insert(dy,0,0)
+    dz = np.diff(zSP);np.insert(dz,0,0)
+
+    distance    = np.sqrt(dx**2+dy**2+dz**2)
+    distancCum  = np.cumsum(distance)
+    return np.insert(distancCum ,0,0)
 
 
 

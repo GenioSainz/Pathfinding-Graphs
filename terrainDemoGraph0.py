@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from   perlin_noise import PerlinNoise
 from   utils import roundGrid,gridGraphDIS,gridGraph_DIS_SLOPE,node2coords,coords2node
+import time
+
+
+starTime = time.time()
 
 # create procedural terrain
 ############################## 200 3
@@ -30,6 +34,8 @@ for i in range(N):
     for j in range(N):
         z = noise([i*frec,j*frec])
         Z[i,j] = np.interp(z,[-1,1],[100,500])
+     
+print('Terrain: ',np.round(time.time() - starTime,3),' s')
 
 # contour_levels 
 #################
@@ -47,8 +53,9 @@ G1 = gridGraphDIS(X,Y,Z)
 
 # start - end nodes
 ####################
-pA     = [300,100]
-pB     = [700,900]
+pA     = [70,480]
+#pB     = [770,770]
+pB     = [950,250]
 node_i = coords2node(pA[0],pA[1],x,y,cellSize)
 node_f = coords2node(pB[0],pB[1],x,y,cellSize)
 
@@ -56,6 +63,8 @@ node_f = coords2node(pB[0],pB[1],x,y,cellSize)
 #############
 nodesSP1       = nx.dijkstra_path(G1, node_i, node_f, weight='weight')
 xSP1,ySP1,zSP1 = node2coords(nodesSP1,X,Y,Z)
+
+print('Graph1: ',np.round(time.time() - starTime,3),' s')
 
 # create graph 2
 #################
@@ -65,6 +74,8 @@ G2 = gridGraph_DIS_SLOPE(X,Y,Z,gX,gY)
 #############
 nodesSP2       = nx.dijkstra_path(G2, node_i, node_f, weight='weight')
 xSP2,ySP2,zSP2 = node2coords(nodesSP2,X,Y,Z)
+
+print('Graph2: ',np.round(time.time() - starTime,3),' s')
 
 # init figure
 ##################
@@ -100,14 +111,27 @@ color_dimension  = np.sqrt( gX**2 + gY**2 )
 # fcolors = m.to_rgba(color_dimension)
 # mesh    = ax1.plot_surface(X,Y,Z, facecolors=fcolors, vmin=minn, vmax=maxx,rcount=200,ccount=200,alpha=0.75)
 
+ax2.grid(False)
 meshC = ax2.pcolormesh(X, Y, color_dimension, cmap='jet')
 ax2.contour(X, Y, Z, colors='k', levels=contour_levels, linewidths=0.5)
-ax2.plot(xSP1,ySP1,'w',linewidth=3);ax2.plot(xSP1,ySP1,'r',linewidth=1)
-ax2.plot(xSP2,ySP2,'w',linewidth=3);ax2.plot(xSP2,ySP2,'b',linewidth=1)
+ax2.plot(xSP1,ySP1,'w',linewidth=3);ax2.plot(xSP1,ySP1,'r',linewidth=1,label="Path AB min(Distance)")
+ax2.plot(xSP2,ySP2,'w',linewidth=3);ax2.plot(xSP2,ySP2,'b',linewidth=1,label="Path AB min(Slope)")
 ax2.scatter(xSP1[0] , ySP1[0] , s=50, c='b', edgecolors='black')
 ax2.scatter(xSP1[-1], ySP1[-1], s=50, c='b', edgecolors='black')
+
+ax2.text(pA[0],pA[1],'A',bbox={'facecolor': 'w', 'alpha': 0.9, 'pad': 3})
+ax2.text(pB[0],pB[1],'B',bbox={'facecolor': 'w', 'alpha': 0.9, 'pad': 3})
+
+
+ax2.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=1, fancybox=True).get_frame().set_edgecolor('k')
 fig.colorbar(meshC, ax=ax2,shrink=0.5)
+
+print('Figures: ',np.round(time.time() - starTime,3),' s')
 
 plt.tight_layout()
 plt.show()
 
+
+figure = plt.gcf()  
+figure.set_size_inches(16, 9)
+plt.savefig('imgs/img0', bbox_inches='tight',dpi=300)

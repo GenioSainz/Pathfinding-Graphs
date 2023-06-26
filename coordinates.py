@@ -6,8 +6,8 @@ Created on Wed Jun 21 10:16:01 2023
 """
     
 import numpy as np
-from utils import roundGrid
-
+from utils import roundGrid,moving_average
+import matplotlib.pyplot as plt
 
 cellSize = 5
 
@@ -54,3 +54,27 @@ gY,gX = np.gradient(f,cellSize)
 
 
 
+xx = np.array([0.2,0.5,0.8,1.3,1.7,2.2,2.8,3.5])
+xx = np.linspace(0,4,50)
+yy = xx**2
+slope = np.diff(yy)/np.diff(xx)
+slope0 = np.insert(slope, 0, 0, axis=0)
+
+plt.close('all')
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.grid();ax.set_xlabel('X');ax.set_ylabel('Z')
+ax.plot(xx,yy,'r',linewidth=1,marker='+')
+
+
+
+ax2 = ax.twinx()
+ax2.plot(xx ,slope0,'b',linewidth=1,marker='o')
+ax2.plot(xx[np.arange(len(slope))] ,slope,'b--',linewidth=1,marker='+')
+
+
+plt.show()
+
+
+array = np.array([5,3,8,10,2,1,5,1,0,2])
+ma    = moving_average(array, 2)

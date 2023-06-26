@@ -13,19 +13,15 @@ from   utils import roundGrid,gridGraphDIS,gridGraph_DIS_SLOPE,node2coords,coord
 cellSize     = 5
 contourLabel = cellSize
 minXY = 0
-N     = 5
+N     = 4
 maxXY = N*cellSize
 x     = np.arange(N)*cellSize
 y     = np.arange(N)*cellSize
 X,Y   = np.meshgrid(x,y)
-Y     = np.flipud(Y)
+#Y     = np.flipud(Y)
 Z     = np.zeros((N,N))
-Z[2,2]=5
-
-pA     = [0,10]
-pB     = [20,20]
-node_i = coords2node(pA[0],pA[1],x,y,cellSize)
-node_f = coords2node(pB[0],pB[1],x,y,cellSize)
+Z[2]=5
+#Z[1]=5
 
 # compute gradient
 ####################
@@ -39,7 +35,7 @@ G1 = gridGraphDIS(X,Y,Z)
 # start - end nodes
 ####################
 pA     = [0,10]
-pB     = [20,20]
+pB     = [10,10]
 node_i = coords2node(pA[0],pA[1],x,y,cellSize)
 node_f = coords2node(pB[0],pB[1],x,y,cellSize)
 
@@ -120,12 +116,12 @@ fig2 = plt.figure()
 ax3 = fig2.add_subplot(1, 2, 1)
 ax3.set_box_aspect(1)
 nx.draw_networkx(G1, P1, node_color='r', node_size=200)
-nx.draw_networkx_edge_labels(G1, pos=P1, edge_labels=W1, font_size=8)
+nx.draw_networkx_edge_labels(G1, pos=P1, edge_labels=W1, font_size=8, label_pos=0.3)
 
 ax4 = fig2.add_subplot(1, 2, 2)
 ax4.set_box_aspect(1)
 nx.draw_networkx(G2, P2,  node_color='g',node_size=200)
-nx.draw_networkx_edge_labels(G2, pos=P2, edge_labels=W2, font_size=8)
+nx.draw_networkx_edge_labels(G2, pos=P2, edge_labels=W2, font_size=8, label_pos=0.3)
 
 
 

@@ -26,9 +26,12 @@ class NeuralNetwork:
          
         return a
         
-    def sigmoid(self,xVec):
+    def sigmoid(self,zVec):
         
-        return 1/(1+np.exp(-xVec))
+        return 1/(1+np.exp(-zVec))
+    
+
+
     
 layers = [2,3,4,5]
 inp1   = np.random.rand( layers[0], 1)
